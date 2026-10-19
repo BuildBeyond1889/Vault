@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Archie Vault</title>
+<style>
+@font-face { font-family: "Geist"; src: url(/fonts/Geist-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Geist"; src: url(/fonts/Geist-SemiBold.ttf); font-weight: 500 600; }
+@font-face { font-family: "Geist"; src: url(/fonts/Geist-Bold.ttf); font-weight: 700 800; }
+@font-face { font-family: "JetBrains Mono"; src: url(/fonts/JetBrainsMono-Regular.ttf); font-weight: 400 500; }
+@font-face { font-family: "JetBrains Mono"; src: url(/fonts/JetBrainsMono-Bold.ttf); font-weight: 700; }
+/* The Vault: Archie's black and lime, like the Workshop. */
+:root { --bg: #050605; --panel: #0b0d0a; --panel2: #10130e; --line: #22261f; --fg: #e8e8e3; --muted: #8f918a; --dim: #5d6157;
+  --lime: #c6f432; --blue: #7ec8ff; --amber: #ffc85a; --red: #ff8a7a; --green: #8fe39a;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; --body: "Geist", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 13px; display: flex; flex-direction: column; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+a { color: var(--lime); }
+.top { min-height: 50px; display: flex; align-items: center; gap: 12px; padding: 7px 14px; border-bottom: 1px solid var(--line); background: #030403; flex-shrink: 0; flex-wrap: wrap; }
+.top b.brand { font-family: var(--mono); letter-spacing: .14em; font-size: 12px; cursor: pointer; white-space: nowrap; } .top b.brand span { color: var(--lime); }
+.sbox { flex: 1; display: flex; min-width: 260px; max-width: 760px; border: 1px solid #2b3125; border-radius: 8px; overflow: hidden; background: #070807; }
+.sbox input { flex: 1; background: none; border: 0; padding: 9px 12px; outline: none; font-size: 14px; min-width: 0; }
+.sbox select { background: #0b0d0a; border: 0; border-left: 1px solid #2b3125; padding: 0 8px; max-width: 210px; font-size: 12px; }
+.sbox button { background: var(--lime); color: #0a0c06; border: 0; padding: 0 16px; font-weight: 700; cursor: pointer; font-family: var(--mono); font-size: 11px; }
+.seg { display: flex; border: 1px solid #2b3125; border-radius: 8px; overflow: hidden; }
+.seg button { all: unset; cursor: pointer; padding: 7px 11px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.seg button.on { background: #141b0b; color: var(--lime); box-shadow: inset 0 -2px 0 var(--lime); }
+.seg button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.btn { background: none; border: 1px solid #2b3125; border-radius: 6px; padding: 6px 11px; cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--fg); min-height: 32px; white-space: nowrap; }
+.btn:hover { border-color: var(--lime); color: var(--lime); }
+.btn.go { background: var(--lime); color: #0a0c06; border-color: var(--lime); font-weight: 700; }
+.btn:disabled { opacity: .45; cursor: default; }
+.chip { font-family: var(--mono); font-size: 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+.main { flex: 1; display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 0; }
+.left { border-right: 1px solid var(--line); overflow-y: auto; padding: 8px 8px 20px; }
+.lh { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: var(--muted); padding: 12px 8px 6px; }
+.nav { all: unset; box-sizing: border-box; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 9px; border-radius: 6px; font-size: 12.5px; }
+.nav:hover { background: var(--panel); } .nav span { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+.nav:focus-visible { outline: 2px solid var(--lime); }
+.view { overflow-y: auto; padding: 18px 24px 50px; min-width: 0; }
+.view.reader { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+h1 { margin: 0 0 4px; font-size: 22px; } .sub { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.sec { margin-top: 26px; } .sec > .sh { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.sec > .sh h2 { margin: 0; font-size: 16px; } .sec > .sh .sub { font-size: 12px; }
+.kick { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; color: var(--lime); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.pk { all: unset; box-sizing: border-box; cursor: pointer; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 13px; display: flex; gap: 11px; min-width: 0; position: relative; }
+.pk:hover { border-color: #3c4d12; background: var(--panel2); } .pk:focus-visible { outline: 2px solid var(--lime); }
+.ic { width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0; background: #151a10; display: grid; place-items: center; font-family: var(--mono); font-weight: 700; color: var(--lime); overflow: hidden; }
+.ic img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.pk .tx { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pk b { font-size: 13px; line-height: 1.3; }
+.pk .d { color: var(--muted); font-size: 11.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pk .m { font-family: var(--mono); font-size: 9.5px; color: var(--dim); display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.age { color: var(--blue); }
+.lic { color: var(--muted); } .lic.orange, .lic.grey { color: var(--amber); }
+.licbox { font-size: 12px; line-height: 1.5; color: #c8cbc0; border-left: 2px solid #3c4d12; padding: 2px 0 2px 10px; }
+.licbox.orange, .licbox.grey { border-color: var(--amber); }
+.badge { position: absolute; top: 8px; right: 9px; font-family: var(--mono); font-size: 9px; letter-spacing: .1em; padding: 1px 7px; border-radius: 10px; background: var(--lime); color: #0a0c06; font-weight: 700; }
+.badge.up { background: var(--amber); }
+.pick { all: unset; box-sizing: border-box; cursor: pointer; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 15px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pick:hover { border-color: #3c4d12; } .pick:focus-visible { outline: 2px solid var(--lime); }
+.pick b { font-size: 15px; } .pick .d { color: #c8cbc0; font-size: 12px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.pick .w { font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+.row3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.saved { display: flex; flex-direction: column; }
+.sv { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #14170f; padding: 7px 4px; }
+.sv a { all: unset; cursor: pointer; flex: 1; min-width: 0; } .sv a b { font-size: 13px; } .sv a span { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: 8px; }
+.sv a:hover b { color: var(--lime); } .sv a:focus-visible { outline: 2px solid var(--lime); }
+.x { all: unset; cursor: pointer; color: var(--dim); font-family: var(--mono); font-size: 11px; padding: 2px 6px; } .x:hover { color: var(--red); }
+.note { border: 1px dashed #4a5a18; border-radius: 8px; padding: 10px 12px; background: #0e120a; line-height: 1.55; font-size: 12.5px; color: #c8cbc0; }
+.note.warn { border-color: #5a4a18; background: #12100a; }
+/* search */
+.res { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.r { all: unset; cursor: pointer; display: block; padding: 10px 12px; border-radius: 8px; border: 1px solid transparent; }
+.r:hover { background: var(--panel); border-color: var(--line); } .r:focus-visible { outline: 2px solid var(--lime); }
+.r b { font-size: 14.5px; color: var(--fg); } .r .p { font-family: var(--mono); font-size: 10px; color: var(--lime); margin-left: 8px; }
+.r .s { color: #b9bcb2; font-size: 12.5px; line-height: 1.5; margin-top: 3px; }
+.fchips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.fchips button { all: unset; cursor: pointer; font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--line); border-radius: 20px; padding: 3px 10px; color: var(--muted); }
+.fchips button.on, .fchips button:hover { color: var(--lime); border-color: #3c4d12; } .fchips button:focus-visible { outline: 2px solid var(--lime); }
+.spin::after { content: ""; display: inline-block; width: 10px; height: 10px; border: 2px solid var(--lime); border-right-color: transparent; border-radius: 50%; animation: s .8s linear infinite; margin-left: 8px; vertical-align: -1px; }
+@keyframes s { to { transform: rotate(360deg); } }
+/* reader */
+.rbar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--line); background: #070807; flex-wrap: wrap; flex-shrink: 0; }
+.rbar .t { flex: 1; min-width: 160px; display: flex; flex-direction: column; } .rbar .t b { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rbar .t span { font-family: var(--mono); font-size: 10px; color: var(--muted); cursor: pointer; } .rbar .t span:hover { color: var(--lime); }
+.about { border-bottom: 1px solid var(--line); background: var(--panel); padding: 14px 18px; display: flex; gap: 16px; flex-shrink: 0; max-height: 46vh; overflow-y: auto; }
+.about .ic { width: 56px; height: 56px; font-size: 20px; }
+.about .bd { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.about h2 { margin: 0; font-size: 19px; } .about p { margin: 0; font-size: 13px; line-height: 1.55; color: #c8cbc0; }
+.about .m { font-family: var(--mono); font-size: 10.5px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+.rel { display: flex; gap: 6px; flex-wrap: wrap; }
+.rel button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 20px; padding: 3px 10px 3px 4px; font-size: 12px; }
+.rel button:hover { border-color: #3c4d12; color: var(--lime); } .rel button:focus-visible { outline: 2px solid var(--lime); }
+.rel .ic { width: 20px; height: 20px; border-radius: 50%; font-size: 9px; }
+iframe.page { flex: 1; width: 100%; border: 0; background: #fff; min-height: 0; }
+.cardsbox { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: #0e120a; flex-wrap: wrap; flex-shrink: 0; font-size: 12.5px; }
+.cardsbox input { background: #070807; border: 1px solid #2b3125; border-radius: 6px; padding: 6px 9px; width: 260px; }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #141b0b; border: 1px solid #3c4d12; color: var(--fg); padding: 9px 16px; border-radius: 8px; font-size: 12.5px; z-index: 9; max-width: 80vw; }
+.empty { color: var(--muted); padding: 30px 0; line-height: 1.6; }
+@media (max-width: 760px) { .main { grid-template-columns: 1fr; } .left { display: none; } .view { padding: 14px 16px 40px; } }
+
+/* ---------- Vault Search skin (the public program): the same teal reading room as the search page ---------- */
+@font-face { font-family: "Young Serif"; src: url(/fonts/YoungSerif-400.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: "Atkinson"; src: url(/fonts/Atkinson-400.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: "Atkinson"; src: url(/fonts/Atkinson-700.woff2) format("woff2"); font-weight: 700; }
+:root[data-skin="public"] {
+  --bg: #eef0ec; --panel: #ffffff; --panel2: #f6f7f3; --line: #d3d8d3; --fg: #1a1d1b; --muted: #59615c; --dim: #7c837e;
+  --lime: #12605d; --blue: #2a6f9e; --amber: #b0731a; --red: #b5483b; --green: #3f7d3a;
+  --band: #123d3c; --band-ink: #f1efe6; --band-muted: #a9c3bf; --ochre: #e0a63e; --ochre-ink: #1a1d1b;
+  --s-core: #3d5a80; --s-health: #b5483b; --s-land: #5f7f3a; --s-repair: #c47f2c; --s-code: #6a4c93; --s-learn: #2a7f86; --s-maps: #8a6f4e; --s-other: #7c837e;
+  --display: "Young Serif", Georgia, serif;
+  --body: "Atkinson", "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif; --mono: "Atkinson", "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root[data-skin="public"] {
+  --bg: #111413; --panel: #1a1e1c; --panel2: #202522; --line: #2b312e; --fg: #e8ebe7; --muted: #a3aca6; --dim: #7f8882;
+  --lime: #7fd0c8; --blue: #8cc3ec; --amber: #e7b04c; --band: #0b2625; --band-ink: #ecebe2; --band-muted: #8fb0ab;
+  --ochre: #e7b04c; --ochre-ink: #111413; color-scheme: dark } }
+[data-skin="public"] body { font-size: 15px; }
+[data-skin="public"] .top { background: var(--band); color: var(--band-ink); border-bottom: 8px solid #6b4f33; min-height: 64px; }
+[data-skin="public"] .top b.brand { font-family: var(--display); font-size: 21px; letter-spacing: 0; font-weight: 400; color: var(--band-ink); }
+[data-skin="public"] .top b.brand span { color: var(--band-ink); }
+[data-skin="public"] .sbox { background: var(--panel); border: 0; border-radius: 12px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+[data-skin="public"] .sbox input { font-size: 16px; color: var(--fg); padding: 11px 14px; }
+[data-skin="public"] .sbox select { background: var(--panel2); color: var(--fg); border-left: 1px solid var(--line); font-size: 14px; }
+[data-skin="public"] .sbox button { background: var(--ochre); color: var(--ochre-ink); font-family: var(--body); font-size: 15px; text-transform: none; }
+[data-skin="public"] .seg { border-color: rgba(255,255,255,.25); border-radius: 999px; }
+[data-skin="public"] .seg button { font-family: var(--body); font-size: 14px; color: var(--band-muted); padding: 7px 13px; }
+[data-skin="public"] .seg button.on { background: rgba(255,255,255,.14); color: var(--band-ink); box-shadow: none; }
+[data-skin="public"] .top .btn { border-color: rgba(255,255,255,.3); color: var(--band-ink); font-family: var(--body); font-size: 14px; border-radius: 999px; }
+[data-skin="public"] .top .btn:hover { border-color: var(--ochre); color: var(--band-ink); }
+[data-skin="public"] .top .chip { border-color: rgba(255,255,255,.25); color: var(--band-muted); font-family: var(--body); font-size: 13px; }
+[data-skin="public"] .btn { font-family: var(--body); font-size: 14px; border-radius: 8px; }
+[data-skin="public"] .btn.go { background: var(--ochre); border-color: var(--ochre); color: var(--ochre-ink); }
+[data-skin="public"] .lh, [data-skin="public"] .kick { font-family: var(--body); font-size: 12px; letter-spacing: .1em; }
+[data-skin="public"] .kick { color: var(--lime); font-weight: 700; }
+[data-skin="public"] h1, [data-skin="public"] .sec > .sh h2, [data-skin="public"] .about h2 { font-family: var(--display); font-weight: 400; }
+[data-skin="public"] h1 { font-size: 34px; }
+[data-skin="public"] .sec > .sh h2 { font-size: 24px; display: flex; align-items: center; gap: 10px; }
+[data-skin="public"] .sec > .sh h2::before { content: ""; width: 12px; height: 22px; border-radius: 2px; background: var(--c, var(--s-other)); }
+[data-skin="public"] .nav { font-size: 15px; }
+[data-skin="public"] .nav i { width: 8px; height: 14px; border-radius: 2px; background: var(--c); flex: none; margin-right: 8px; }
+[data-skin="public"] .pk { border-left: 7px solid var(--c, var(--line)); background: var(--panel); }
+[data-skin="public"] .pk b { font-family: var(--display); font-weight: 400; font-size: 16px; }
+[data-skin="public"] .pk .d { font-size: 13.5px; }
+[data-skin="public"] .pk .m { font-family: var(--body); font-size: 12px; }
+[data-skin="public"] .ic { background: var(--panel2); color: var(--lime); font-family: var(--body); }
+[data-skin="public"] .pick b, [data-skin="public"] .r b { font-family: var(--display); font-weight: 400; }
+[data-skin="public"] .pick .w, [data-skin="public"] .r .p, [data-skin="public"] .sv a span, [data-skin="public"] .chip, [data-skin="public"] .fchips button { font-family: var(--body); }
+[data-skin="public"] .badge { background: var(--ochre); color: var(--ochre-ink); font-family: var(--body); }
+[data-skin="public"] .rbar { background: var(--band); color: var(--band-ink); }
+[data-skin="public"] .rbar .t span { font-family: var(--body); color: var(--band-muted); }
+[data-skin="public"] .rbar .btn { color: var(--band-ink); border-color: rgba(255,255,255,.3); }
+[data-skin="public"] .about .m { font-family: var(--body); }
+[data-skin="public"] .note { border-color: var(--line); background: var(--panel2); color: var(--fg); }
+[data-skin="public"] .toast { background: var(--band); color: var(--band-ink); border-color: var(--band); }
+[data-skin="public"] .licbox, [data-skin="public"] .pick .d, [data-skin="public"] .about p, [data-skin="public"] .r .s { color: var(--fg); }
+[data-skin="public"] .licbox { border-left-color: var(--lime); font-size: 13px; }
+[data-skin="public"] .licbox.orange, [data-skin="public"] .licbox.grey { border-left-color: var(--amber); }
+[data-skin="public"] .note.warn { background: var(--panel2); border-color: var(--amber); }
+[data-skin="public"] .about p, [data-skin="public"] .pick .d, [data-skin="public"] .r .s { font-size: 14px; }
+.langb { display: none; }
+[data-skin="public"] .langb { display: block; position: relative; }
+.langb > button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--band-muted); background: transparent; color: var(--band-ink); font-weight: 700; font-size: 13px; cursor: pointer; }
+.langb .menu { position: absolute; top: 48px; left: 0; background: var(--panel); color: var(--fg); border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.28); padding: 6px; z-index: 20; min-width: 200px; }
+.langb .menu button { display: flex; justify-content: space-between; gap: 14px; width: 100%; background: none; border: 0; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 15px; text-align: start; }
+.langb .menu button:hover, .langb .menu button[aria-checked="true"] { background: var(--panel2); }
+.langb .menu span { color: var(--muted); font-size: 12px; }
+.tosearch, .zoomb, .ideas, .limits { display: none; }
+[data-skin="public"] .zoomb { display: flex; gap: 4px; }
+[data-skin="public"] .zoomb button { background: transparent; border: 1px solid rgba(255,255,255,.3); color: var(--band-ink); border-radius: 8px; padding: 5px 9px; cursor: pointer; font-weight: 700; }
+[data-skin="public"] .ideas { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; color: var(--muted); }
+[data-skin="public"] .idea { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; cursor: pointer; font-size: 14px; }
+[data-skin="public"] .idea:hover { border-color: var(--lime); }
+[data-skin="public"] .limits { display: block; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 60em; }
+[data-skin="public"] .limits a { color: var(--lime); font-weight: 700; }
+[data-skin="public"] .r { border-left: 6px solid var(--c, var(--line)); background: var(--panel); margin-bottom: 8px; border-radius: 8px; }
+[data-skin="public"] .r b { font-size: 19px; color: var(--fg); }
+[data-skin="public"] .r .p { color: var(--muted); font-size: 13px; }
+[data-skin="public"] .r .s b { font-family: var(--body) !important; font-size: inherit !important; display: inline !important; color: inherit !important; background: #fbe3a6; border-radius: 2px; padding: 0 2px; }
+@media (prefers-color-scheme: dark) { [data-skin="public"] .r .s b { background: #5a4a1c; } }
+@media (max-width: 600px) { [data-skin="public"] .sbox select { display: none; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="langb" id="langb"><button id="bubble" aria-haspopup="true" aria-expanded="false" title="Language">EN</button><div class="menu" id="lmenu" role="menu" hidden></div></div>
+  <b class="brand" id="brand" onclick="go('#home')" title="The front page">ARCHIE <span>VAULT</span></b>
+  <a class="tosearch" href="/" data-t="tosearch">Back to search</a>
+  <form class="sbox" onsubmit="event.preventDefault(); doSearch()">
+    <input id="q" type="search" placeholder="Search the whole library..." data-ph="ph" aria-label="Search the vault" autocomplete="off">
+    <select id="scope" aria-label="Where to search"></select>
+    <button type="submit" data-t="search">SEARCH</button>
+  </form>
+  <div class="seg" id="ages" role="group" aria-label="Who it's for">
+    <button data-a="" class="on" data-t="everyone">Everyone</button><button data-a="kids" data-t="kids">Kids</button><button data-a="teens" data-t="teens">Teens</button><button data-a="adults" data-t="adults">Adults</button>
+  </div>
+  <button class="btn" onclick="randomPage()" title="A random page from the packs you're looking at" data-t="random">Random page</button>
+  <span class="chip" id="stat">...</span>
+  <div class="zoomb" role="group"><button onclick="zoom(-1)" aria-label="Smaller text" title="Smaller text">A-</button><button onclick="zoom(1)" aria-label="Bigger text" title="Bigger text">A+</button></div>
+</div>
+<div class="main">
+  <nav class="left" id="left" aria-label="Shelves"></nav>
+  <main class="view" id="view"></main>
+</div>
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// ---------- the public program (Vault Search) speaks several languages; Archie's own window stays English
+const PUBLIC = document.documentElement.dataset.skin === "public";
+const LANGS = [["en", "English"], ["sw", "Kiswahili"], ["fr", "Français"], ["es", "Español"], ["pt", "Português"], ["ar", "العربية"], ["hi", "हिन्दी"], ["zh", "中文"]];
+const W = {
+  en: { search: "Search", ph: "Search the whole library...", everyone: "Everyone", kids: "Kids", teens: "Teens", adults: "Adults", random: "Random page",
+    tosearch: "Back to search", front: "Front page", shelves: "SHELVES", yours: "YOURS", saved: "Saved pages", updated: "New and updated", library: "Your offline library",
+    kidshelf: "The kids' shelf", teenshelf: "The teens' shelf", adultshelf: "The adults' shelf", today: "PICKED FOR TODAY", todaysub: "Three pages from the library, new every day",
+    everything: "Everything", only: "Only", frontpage: "Front page", randompack: "Random in this pack", save: "Save", savedbtn: "Saved", draft: "draft",
+    core: "Encyclopedias and books", health: "Health", land: "Farming, water and energy", repair: "Repair and electronics", code: "Computers and coding", learn: "School and learning", maps: "Maps", other: "Other", limits: "This is a library, not a doctor, engineer or teacher. Pages can be out of date. When something is urgent or dangerous, reach someone trained if you can.", fix: "", fixhow: "", try: "Try:", looking: "Looking", none: "Nothing found for {q}. Try fewer words, or another word for the same thing.", found: "{n} pages found for {q}.", smaller: "Smaller text", bigger: "Bigger text", from: "from {p}", ideas: ["clean drinking water", "malaria", "fix a bicycle chain", "solar panel", "fractions", "first aid for burns", "how to plant maize"] },
+  sw: { search: "Tafuta", ph: "Tafuta maktaba yote...", everyone: "Wote", kids: "Watoto", teens: "Vijana", adults: "Watu wazima", random: "Ukurasa wowote",
+    tosearch: "Rudi kwenye utafutaji", front: "Ukurasa wa mbele", shelves: "RAFU", yours: "ZAKO", saved: "Kurasa ulizohifadhi", updated: "Mpya na zilizosasishwa", library: "Maktaba yako ya nje ya mtandao",
+    kidshelf: "Rafu ya watoto", teenshelf: "Rafu ya vijana", adultshelf: "Rafu ya watu wazima", today: "ZILIZOCHAGULIWA LEO", todaysub: "Kurasa tatu kutoka maktabani, mpya kila siku",
+    everything: "Kila kitu", only: "Tu", frontpage: "Ukurasa wa mbele", randompack: "Ukurasa wowote hapa", save: "Hifadhi", savedbtn: "Imehifadhiwa", draft: "rasimu",
+    core: "Ensaiklopidia na vitabu", health: "Afya", land: "Kilimo, maji na nishati", repair: "Matengenezo na elektroniki", code: "Kompyuta na programu", learn: "Shule na kujifunza", maps: "Ramani", other: "Nyingine", limits: "Hii ni maktaba, si daktari, mhandisi wala mwalimu. Kurasa zinaweza kuwa zimepitwa na wakati. Jambo likiwa la dharura au la hatari, mtafute mtu aliyefunzwa ikiwezekana.", fix: "Saidia kurekebisha tafsiri hii", fixhow: "Umeona neno lisilo sahihi? Andika neno sahihi hapo, au mwambie aliyekupa diski hii.", try: "Jaribu:", looking: "Inatafuta", none: "Hakuna kilichopatikana kwa {q}. Jaribu maneno machache, au neno jingine lenye maana hiyo hiyo.", found: "Kurasa {n} zimepatikana kwa {q}.", smaller: "Herufi ndogo", bigger: "Herufi kubwa", from: "kutoka {p}", ideas: ["maji safi", "malaria", "kilimo cha mahindi", "nishati ya jua", "huduma ya kwanza", "hesabu"] },
+  fr: { search: "Chercher", ph: "Chercher dans toute la bibliothèque...", everyone: "Tous", kids: "Enfants", teens: "Ados", adults: "Adultes", random: "Page au hasard",
+    tosearch: "Retour à la recherche", front: "Accueil", shelves: "ÉTAGÈRES", yours: "À VOUS", saved: "Pages gardées", updated: "Nouveau et mis à jour", library: "Votre bibliothèque hors ligne",
+    kidshelf: "L'étagère des enfants", teenshelf: "L'étagère des ados", adultshelf: "L'étagère des adultes", today: "CHOISI POUR AUJOURD'HUI", todaysub: "Trois pages de la bibliothèque, nouvelles chaque jour",
+    everything: "Tout", only: "Seulement", frontpage: "Accueil", randompack: "Au hasard ici", save: "Garder", savedbtn: "Gardé", draft: "brouillon",
+    core: "Encyclopédies et livres", health: "Santé", land: "Agriculture, eau et énergie", repair: "Réparation et électronique", code: "Informatique et programmation", learn: "École et apprentissage", maps: "Cartes", other: "Autres", limits: "Ceci est une bibliothèque, pas un médecin, un ingénieur ou un enseignant. Les pages peuvent être anciennes. En cas d'urgence ou de danger, contactez si possible une personne formée.", fix: "Aidez à corriger cette traduction", fixhow: "Un mot vous semble faux ? Proposez le bon mot ici, ou dites-le à la personne qui vous a donné ce disque.", try: "Essayez :", looking: "Recherche", none: "Rien trouvé pour {q}. Essayez moins de mots, ou un autre mot pour la même chose.", found: "{n} pages trouvées pour {q}.", smaller: "Texte plus petit", bigger: "Texte plus grand", from: "de {p}", ideas: ["eau potable", "paludisme", "réparer un vélo", "panneau solaire", "premiers secours", "fractions"] },
+  es: { search: "Buscar", ph: "Buscar en toda la biblioteca...", everyone: "Todos", kids: "Niños", teens: "Jóvenes", adults: "Adultos", random: "Página al azar",
+    tosearch: "Volver a la búsqueda", front: "Inicio", shelves: "ESTANTES", yours: "TUYO", saved: "Páginas guardadas", updated: "Nuevo y actualizado", library: "Tu biblioteca sin internet",
+    kidshelf: "El estante de los niños", teenshelf: "El estante de los jóvenes", adultshelf: "El estante de los adultos", today: "ELEGIDO PARA HOY", todaysub: "Tres páginas de la biblioteca, nuevas cada día",
+    everything: "Todo", only: "Solo", frontpage: "Inicio", randompack: "Al azar aquí", save: "Guardar", savedbtn: "Guardado", draft: "borrador",
+    core: "Enciclopedias y libros", health: "Salud", land: "Agricultura, agua y energía", repair: "Reparación y electrónica", code: "Computación y programación", learn: "Escuela y aprendizaje", maps: "Mapas", other: "Otros", limits: "Esto es una biblioteca, no un médico, ingeniero ni maestro. Las páginas pueden estar desactualizadas. Si algo es urgente o peligroso, busca a una persona capacitada si puedes.", fix: "Ayuda a corregir esta traducción", fixhow: "¿Ves una palabra equivocada? Sugiere la correcta aquí, o díselo a quien te dio este disco.", try: "Prueba:", looking: "Buscando", none: "No se encontró nada para {q}. Prueba con menos palabras, u otra palabra para lo mismo.", found: "{n} páginas encontradas para {q}.", smaller: "Texto más pequeño", bigger: "Texto más grande", from: "de {p}", ideas: ["agua potable", "malaria", "reparar una bicicleta", "panel solar", "primeros auxilios", "fracciones"] },
+  pt: { search: "Pesquisar", ph: "Pesquisar em toda a biblioteca...", everyone: "Todos", kids: "Crianças", teens: "Jovens", adults: "Adultos", random: "Página aleatória",
+    tosearch: "Voltar à pesquisa", front: "Início", shelves: "ESTANTES", yours: "SEUS", saved: "Páginas salvas", updated: "Novo e atualizado", library: "Sua biblioteca offline",
+    kidshelf: "A estante das crianças", teenshelf: "A estante dos jovens", adultshelf: "A estante dos adultos", today: "ESCOLHIDO PARA HOJE", todaysub: "Três páginas da biblioteca, novas todo dia",
+    everything: "Tudo", only: "Só", frontpage: "Início", randompack: "Aleatória aqui", save: "Salvar", savedbtn: "Salvo", draft: "rascunho",
+    core: "Enciclopédias e livros", health: "Saúde", land: "Agricultura, água e energia", repair: "Reparos e eletrônica", code: "Computação e programação", learn: "Escola e aprendizagem", maps: "Mapas", other: "Outros", limits: "Isto é uma biblioteca, não um médico, engenheiro ou professor. As páginas podem estar desatualizadas. Se algo for urgente ou perigoso, procure uma pessoa treinada se puder.", fix: "Ajude a corrigir esta tradução", fixhow: "Viu uma palavra errada? Sugira a certa aqui, ou avise quem lhe deu este disco.", try: "Experimente:", looking: "Procurando", none: "Nada encontrado para {q}. Tente menos palavras, ou outra palavra para a mesma coisa.", found: "{n} páginas encontradas para {q}.", smaller: "Texto menor", bigger: "Texto maior", from: "de {p}", ideas: ["água potável", "malária", "consertar bicicleta", "painel solar", "primeiros socorros", "frações"] },
+  ar: { search: "ابحث", ph: "ابحث في المكتبة كلها...", everyone: "الجميع", kids: "الأطفال", teens: "الشباب", adults: "الكبار", random: "صفحة عشوائية",
+    tosearch: "العودة إلى البحث", front: "الصفحة الأولى", shelves: "الرفوف", yours: "لك", saved: "الصفحات المحفوظة", updated: "جديد ومحدّث", library: "مكتبتك دون إنترنت",
+    kidshelf: "رف الأطفال", teenshelf: "رف الشباب", adultshelf: "رف الكبار", today: "مختار لليوم", todaysub: "ثلاث صفحات من المكتبة، جديدة كل يوم",
+    everything: "الكل", only: "فقط", frontpage: "الصفحة الأولى", randompack: "عشوائي هنا", save: "احفظ", savedbtn: "محفوظ", draft: "مسودة",
+    core: "موسوعات وكتب", health: "الصحة", land: "الزراعة والمياه والطاقة", repair: "الإصلاح والإلكترونيات", code: "الحاسوب والبرمجة", learn: "المدرسة والتعلّم", maps: "خرائط", other: "أخرى", limits: "هذه مكتبة، وليست طبيبًا أو مهندسًا أو معلمًا. قد تكون الصفحات قديمة. إذا كان الأمر عاجلًا أو خطيرًا، فاطلب مساعدة شخص مدرّب إن أمكن.", fix: "ساعد في تصحيح هذه الترجمة", fixhow: "هل رأيت كلمة خاطئة؟ اقترح الكلمة الصحيحة هنا، أو أخبر من أعطاك هذا القرص.", try: "جرّب:", looking: "جارٍ البحث", none: "لم يُعثر على شيء عن {q}. جرّب كلمات أقل، أو كلمة أخرى بنفس المعنى.", found: "وُجدت {n} صفحة عن {q}.", smaller: "نص أصغر", bigger: "نص أكبر", from: "من {p}", ideas: ["مياه الشرب", "الملاريا", "الطاقة الشمسية", "الإسعافات الأولية"] },
+  hi: { search: "खोजें", ph: "पूरे पुस्तकालय में खोजें...", everyone: "सभी", kids: "बच्चे", teens: "किशोर", adults: "वयस्क", random: "कोई भी पन्ना",
+    tosearch: "खोज पर वापस", front: "मुख पृष्ठ", shelves: "अलमारियाँ", yours: "आपके", saved: "सहेजे पन्ने", updated: "नया और अपडेट", library: "आपका ऑफ़लाइन पुस्तकालय",
+    kidshelf: "बच्चों की अलमारी", teenshelf: "किशोरों की अलमारी", adultshelf: "वयस्कों की अलमारी", today: "आज के लिए चुने", todaysub: "पुस्तकालय से तीन पन्ने, रोज़ नए",
+    everything: "सब कुछ", only: "केवल", frontpage: "मुख पृष्ठ", randompack: "यहाँ से कोई भी", save: "सहेजें", savedbtn: "सहेजा", draft: "मसौदा",
+    core: "विश्वकोश और किताबें", health: "स्वास्थ्य", land: "खेती, पानी और ऊर्जा", repair: "मरम्मत और इलेक्ट्रॉनिक्स", code: "कंप्यूटर और कोडिंग", learn: "स्कूल और पढ़ाई", maps: "नक्शे", other: "अन्य", limits: "यह एक पुस्तकालय है, डॉक्टर, इंजीनियर या शिक्षक नहीं। पन्ने पुराने हो सकते हैं। कोई बात ज़रूरी या ख़तरनाक हो तो हो सके तो किसी प्रशिक्षित व्यक्ति से मदद लें।", fix: "इस अनुवाद को ठीक करने में मदद करें", fixhow: "कोई शब्द गलत दिखा? सही शब्द यहाँ सुझाएँ, या जिसने आपको यह ड्राइव दी उसे बताएँ।", try: "आज़माएँ:", looking: "खोज रहे हैं", none: "{q} के लिए कुछ नहीं मिला। कम शब्द आज़माएँ, या उसी चीज़ के लिए कोई दूसरा शब्द।", found: "{q} के लिए {n} पन्ने मिले।", smaller: "छोटा अक्षर", bigger: "बड़ा अक्षर", from: "{p} से", ideas: ["साफ़ पीने का पानी", "मलेरिया", "सौर ऊर्जा", "प्राथमिक चिकित्सा"] },
+  zh: { search: "搜索", ph: "搜索整个图书馆……", everyone: "所有人", kids: "儿童", teens: "青少年", adults: "成人", random: "随便看看",
+    tosearch: "返回搜索", front: "首页", shelves: "书架", yours: "我的", saved: "已保存的页面", updated: "新增和更新", library: "你的离线图书馆",
+    kidshelf: "儿童书架", teenshelf: "青少年书架", adultshelf: "成人书架", today: "今日推荐", todaysub: "每天从图书馆选出三页",
+    everything: "全部", only: "仅", frontpage: "首页", randompack: "在此随机", save: "保存", savedbtn: "已保存", draft: "草稿",
+    core: "百科与图书", health: "健康", land: "农业、水和能源", repair: "维修与电子", code: "电脑与编程", learn: "学校与学习", maps: "地图", other: "其他", limits: "这是一个图书馆，不是医生、工程师或老师。页面内容可能已过时。遇到紧急或危险情况时，请尽量联系受过训练的人。", fix: "帮助改进此翻译", fixhow: "发现翻译错误？请在这里提出正确的说法，或告诉给你这个硬盘的人。", try: "试试：", looking: "正在搜索", none: "没有找到关于 {q} 的内容。试试少用几个词，或换一个意思相同的词。", found: "找到 {n} 个关于 {q} 的页面。", smaller: "缩小文字", bigger: "放大文字", from: "来自 {p}", ideas: ["饮用水", "疟疾", "太阳能", "急救"] },
+};
+let LANG = "en";
+try { LANG = PUBLIC ? (localStorage.getItem("search.lang") || "en") : "en"; } catch (e) {}
+if (!W[LANG]) LANG = "en";
+const tr = (k, en) => (PUBLIC && W[LANG][k]) || en || W.en[k] || k;
+const shelfName = s => PUBLIC ? tr(s.id, s.title) : s.title;
+function applyLang() {
+  if (!PUBLIC) return;
+  document.documentElement.lang = LANG; document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("#bubble").textContent = LANG.toUpperCase();
+  for (const el of document.querySelectorAll("[data-t]")) el.textContent = tr(el.dataset.t);
+  for (const el of document.querySelectorAll("[data-ph]")) el.placeholder = tr(el.dataset.ph);
+  $("#lmenu").innerHTML = LANGS.map(([c, n]) => `<button role="menuitemradio" aria-checked="${c === LANG}" onclick="setLang('${c}')">${esc(n)}<span>${c === "en" ? "EN" : esc(W[c].draft) + " · " + c.toUpperCase()}</span></button>`).join("");
+}
+const PROJECT = "https://github.com/BuildBeyond1889/vault";   // where translation fixes go
+const fill = (t, v) => String(t).replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m);
+const LANG3 = { en: "eng", sw: "swa", fr: "fra", es: "spa", pt: "por", ar: "ara", hi: "hin", zh: "zho" };
+let ZOOM = 1;
+try { ZOOM = +localStorage.getItem("vault.zoom") || 1; } catch (e) {}
+function zoom(d) {
+  ZOOM = Math.min(1.5, Math.max(0.85, +(ZOOM + d * 0.1).toFixed(2)));
+  document.documentElement.style.zoom = ZOOM;
+  try { localStorage.setItem("vault.zoom", ZOOM); } catch (e) {}
+}
+if (PUBLIC) document.documentElement.style.zoom = ZOOM;
+function limitsHtml() {
+  if (!PUBLIC) return "";
+  let h = `<div class="limits">${esc(tr("limits"))}`;
+  if (LANG !== "en") h += `<br><a target="_blank" rel="noopener" href="${PROJECT}/issues/new?template=translation.md&title=${encodeURIComponent("Translation fix: " + LANGS.find(x => x[0] === LANG)[1])}&labels=translation">${esc(tr("fix"))}</a> ${esc(tr("fixhow"))}`;
+  return h + `</div>`;
+}
+function setLang(c) { LANG = c; try { localStorage.setItem("search.lang", c); } catch (e) {} $("#lmenu").hidden = true; applyLang(); if (S.cat) { fillScope(); fillLeft(); } route(); }
+if (PUBLIC) {
+  const b = document.getElementById("brand"); b.innerHTML = "Vault Search"; b.title = "";
+  document.title = "Vault Search";
+  document.getElementById("bubble").onclick = e => { e.stopPropagation(); const m = document.getElementById("lmenu"); m.hidden = !m.hidden; };
+  document.addEventListener("click", e => { const m = document.getElementById("lmenu"); if (!m.hidden && !m.contains(e.target)) m.hidden = true; });
+}
+const S = { cat: null, ages: "", pack: null, page: null, about: true, search: null, filter: "" };
+try { S.ages = localStorage.getItem("vault.ages") || ""; } catch (e) {}
+
+async function api(what, params) {
+  const u = "/api/vault/" + what + (params ? "?" + new URLSearchParams(params) : "");
+  const r = await fetch(u); return r.json();
+}
+async function post(what, body) {
+  const r = await fetch("/api/vault/" + what, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  return r.json();
+}
+function toast(t, ms) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 3200); }
+function go(h) { if (location.hash === h) route(); else location.hash = h; }
+const initials = p => esc((p.title || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase());
+const icon = (p, cls) => p.icon ? `<span class="ic ${cls || ""}"><img src="/api/vault/icon?id=${encodeURIComponent(p.id)}" alt="" onerror="this.parentNode.textContent='${initials(p)}'"></span>` :
+  `<span class="ic ${cls || ""}">${initials(p)}</span>`;
+const fmtN = n => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "k" : String(n || 0);
+const AGE = { kids: "kids", teens: "teens", adults: "adults" };
+
+// ---------- catalogue
+async function loadCat() {
+  S.cat = await api("catalog", { ages: S.ages });
+  if (S.cat.error) { $("#view").innerHTML = `<div class="note warn">${esc(S.cat.error)}</div>`; return; }
+  $("#stat").textContent = `${S.cat.packs} packs · ${S.cat.size}`;
+  fillScope(); fillLeft();
+  if (S.cat.scanning || S.cat.indexing) setTimeout(async () => { const keep = location.hash; await loadCat(); if ((keep || "#home") === "#home" && (location.hash || "#home") === "#home") home(true); }, 4000);
+}
+function fillScope() {
+  const sel = $("#scope"), cur = sel.value;
+  let h = `<option value="all">${esc(tr("everything", "Everything"))}</option>`;
+  for (const s of S.cat.shelves) h += `<option value="shelf:${s.id}">${esc(shelfName(s))}</option>`;
+  if (S.pack) h += `<option value="pack:${esc(S.pack.id)}">${esc(tr("only", "Only"))} ${esc(S.pack.title.replace(/\s*\(.*/, ""))}</option>`;
+  sel.innerHTML = h;
+  if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+}
+function fillLeft() {
+  let h = `<button class="nav" onclick="go('#home')">${esc(tr("front", "Front page"))}</button>`;
+  h += `<div class="lh">${esc(tr("shelves", "SHELVES"))}</div>`;
+  for (const s of S.cat.shelves) h += `<button class="nav" style="--c:var(--s-${s.id})" onclick="go('#home');setTimeout(()=>document.getElementById('sh-${s.id}')?.scrollIntoView({behavior:'smooth'}),60)"><span style="display:flex;align-items:center;color:inherit;font-size:inherit;font-family:inherit">${PUBLIC ? "<i></i>" : ""}${esc(shelfName(s))}</span><span>${s.packs.length}</span></button>`;
+  h += `<div class="lh">${esc(tr("yours", "YOURS"))}</div><button class="nav" onclick="go('#saved')">${esc(tr("saved", "Saved pages"))}<span>${(S.cat.saved || []).length}</span></button>`;
+  if ((S.cat.updated || []).length) h += `<button class="nav" onclick="go('#home');setTimeout(()=>document.getElementById('sh-updated')?.scrollIntoView({behavior:'smooth'}),60)">${esc(tr("updated", "New and updated"))}<span>${S.cat.updated.length}</span></button>`;
+  $("#left").innerHTML = h;
+}
+function packCard(p) {
+  const meta = [p.size, p.articles ? fmtN(p.articles) + " pages" : "", p.date].filter(Boolean).map(esc).join("</span><span>");
+  const ages = (p.ages || []).map(a => `<span class="age">${AGE[a]}</span>`).join("") +
+    (p.verdict === "orange" ? `<span class="lic orange">ask first</span>` : p.verdict === "grey" ? `<span class="lic grey">licence unclear</span>` : "");
+  const badge = p.mark === "new" ? `<span class="badge">NEW</span>` : p.mark === "updated" ? `<span class="badge up">UPDATED</span>` : "";
+  return `<button class="pk" style="--c:var(--s-${esc(p.shelf || "other")})" onclick="go('#pack/${encodeURIComponent(p.id)}')" title="${esc(p.desc || p.title)}">${badge}${icon(p)}<span class="tx"><b>${esc(p.title)}</b>
+    <span class="d">${esc(p.error ? "Couldn't open this file: " + p.error : (p.desc || (p.scanned ? "" : "Reading this pack's details...")))}</span>
+    <span class="m"><span>${meta}</span>${ages}</span></span></button>`;
+}
+async function home(quiet) {
+  S.pack = null; fillScope();
+  const c = S.cat, v = $("#view");
+  if (!c || c.error) return;
+  if (!quiet) v.scrollTop = 0;
+  let h = `<h1>${esc(S.ages ? { kids: tr("kidshelf", "The kids' shelf"), teens: tr("teenshelf", "The teens' shelf"), adults: tr("adultshelf", "The adults' shelf") }[S.ages] : tr("library", "Your offline library"))}</h1>
+    <div class="sub">${S.ages ? c.shelves.reduce((n, x) => n + x.packs.length, 0) + " of " : ""}${c.packs} packs, ${esc(c.size)}, all on this PC in ${esc(c.folder || "(no vault folder yet)")}. Nothing here needs the internet.</div>`;
+  if (!c.shelves.length) h += `<div class="note" style="margin-top:16px">No packs found yet. Run one of the <b>Get ...</b> files in the Vault folder, then come back.</div>`;
+  if (c.scanning) h += `<div class="note" style="margin-top:14px"><span class="spin">Reading the details of ${c.scanning} pack${c.scanning > 1 ? "s" : ""} (only the first time)</span></div>`;
+  if (PUBLIC) h += `<div class="ideas"><span>${esc(tr("try"))}</span>${(W[LANG].ideas || W.en.ideas).map(w => `<button class="idea" onclick="$('#q').value=${esc(JSON.stringify(w))};$('#scope').value='all';doSearch()">${esc(w)}</button>`).join("")}</div>`;
+  h += `<div class="sec"><div class="sh"><span class="kick">${esc(tr("today", "PICKED FOR TODAY"))}</span><span class="sub">${esc(tr("todaysub", "Three pages from the library, new every day"))}</span></div><div class="row3" id="today"><div class="empty spin">Picking</div></div></div>`;
+  if ((c.saved || []).length) h += `<div class="sec"><div class="sh"><span class="kick">SAVED PAGES</span><button class="btn" onclick="go('#saved')">All saved pages</button></div><div class="saved">${c.saved.slice(0, 5).map(savedRow).join("")}</div></div>`;
+  if ((c.updated || []).length) h += `<div class="sec" id="sh-updated"><div class="sh"><h2>New and updated</h2><span class="sub">These came in since you last looked</span>
+      <button class="btn" onclick="seenAll()">Mark all as seen</button></div><div class="grid">${c.updated.map(packCard).join("")}</div></div>`;
+  for (const s of c.shelves) h += `<div class="sec" id="sh-${s.id}" style="--c:var(--s-${s.id})"><div class="sh"><h2>${esc(shelfName(s))}</h2><span class="sub">${PUBLIC && LANG !== "en" ? "" : esc(s.desc)}</span></div><div class="grid">${s.packs.map(packCard).join("")}</div></div>`;
+  if ((c.unfinished || []).length) h += `<div class="sec"><div class="note warn">Still downloading (or stopped part way): ${c.unfinished.map(esc).join(", ")}. Run the same Get file again to finish them.</div></div>`;
+  v.innerHTML = h + limitsHtml();
+  todayPicks();
+}
+let todayCache = null;
+async function todayPicks() {
+  const el = $("#today"); if (!el) return;
+  if (!todayCache) todayCache = await api("today");
+  const picks = (todayCache.picks || []).filter(p => !S.ages || p.for === S.ages);
+  if (!$("#today")) return;
+  $("#today").innerHTML = picks.length ? picks.map(p => `<button class="pick" onclick="openPage('${esc(p.id)}', ${esc(JSON.stringify(p.path))})">
+      <span class="w">FOR ${esc(p.for.toUpperCase())} · ${esc(p.pack)}</span><b>${esc(p.title)}</b><span class="d">${esc(p.snippet || "")}</span></button>`).join("")
+    : `<div class="empty">Nothing picked yet. Packs for today's picks come from Wikipedia, storybooks and the how-to libraries.</div>`;
+}
+async function seenAll() { await post("seen", {}); await loadCat(); home(); }
+function savedRow(s) {
+  return `<div class="sv"><a href="#" onclick="event.preventDefault();openPage('${esc(s.id)}', ${esc(JSON.stringify(s.path))})"><b>${esc(s.title)}</b><span>${esc(s.pack)} · ${esc(s.at)}</span></a>
+    <button class="x" title="Remove" onclick="unsave('${esc(s.id)}', ${esc(JSON.stringify(s.path))})">remove</button></div>`;
+}
+async function savedView() {
+  S.pack = null; fillScope();
+  const d = await api("saved");
+  $("#view").innerHTML = `<h1>Saved pages</h1><div class="sub">Pages you kept. Open one to read it again or make flashcards from it.</div>
+    <div class="saved" style="margin-top:14px">${(d.saved || []).map(savedRow).join("") || `<div class="empty">Nothing saved yet. Press <b>Save</b> on any page.</div>`}</div>`;
+}
+async function unsave(id, path) { await post("unsave", { id, path }); await loadCat(); route(); }
+
+// ---------- search
+function doSearch() {
+  const q = $("#q").value.trim(); if (!q) return;
+  go("#search/" + encodeURIComponent($("#scope").value) + "/" + encodeURIComponent(q));
+}
+let searchToken = 0;
+async function searchView(scope, q) {
+  $("#q").value = q;
+  if ([...$("#scope").options].some(o => o.value === scope)) $("#scope").value = scope;
+  const tok = ++searchToken;
+  S.search = { q, scope, results: [], packs: [], skipped: [], busy: true }; S.filter = "";
+  drawSearch();
+  const ages = scope.startsWith("pack:") ? "" : S.ages;
+  const lang = PUBLIC ? LANG3[LANG] : "";
+  const t = await api("search", { q, scope, mode: "title", ages, lang });
+  if (tok !== searchToken) return;
+  merge(t); drawSearch();
+  const x = await api("search", { q, scope, mode: "text", ages, lang });
+  if (tok !== searchToken) return;
+  merge(x); S.search.busy = false; drawSearch();
+}
+function merge(d) {
+  if (d.error) { S.search.error = d.error; return; }
+  const key = r => r.id + "|" + String(r.title).toLowerCase().trim();
+  const seen = new Set(S.search.results.map(key));
+  for (const r of d.results || []) if (!seen.has(key(r)) && !S.search.results.some(x => x.id === r.id && x.path === r.path)) { S.search.results.push(r); seen.add(key(r)); }
+  S.search.results.sort((a, b) => (b.score || 0) - (a.score || 0));
+  const pk = {}; for (const p of S.search.packs) pk[p.id] = p;
+  for (const p of d.packs || []) pk[p.id] = pk[p.id] ? { ...pk[p.id], count: Math.max(pk[p.id].count, p.count) } : p;
+  S.search.packs = Object.values(pk).sort((a, b) => b.count - a.count);
+  S.search.skipped = [...new Set([...(S.search.skipped || []), ...(d.skipped || [])])];
+  S.search.unreached = Math.max(S.search.unreached || 0, d.unreached || 0);
+}
+function drawSearch() {
+  const s = S.search, v = $("#view");
+  const where = s.scope === "all" ? "everything" : ($("#scope").selectedOptions[0] || {}).textContent || s.scope;
+  const list = s.results.filter(r => !S.filter || r.id === S.filter);
+  const shelfOf = {}; for (const sh of (S.cat.shelves || [])) for (const p of sh.packs) shelfOf[p.id] = sh.id;
+  let h = PUBLIC ? `<h1>${esc(s.q)}</h1><div class="sub">${s.busy ? `<span class="spin">${esc(tr("looking"))}</span>` : (s.results.length ? fill(esc(tr("found")), { n: s.results.length, q: "<b>" + esc(s.q) + "</b>" }) : "")}</div>`
+    : `<h1>${esc(s.q)}</h1><div class="sub">Searched ${esc(where)}${S.ages && !s.scope.startsWith("pack:") ? " for " + S.ages : ""}. ${s.busy ? `<span class="spin">Looking inside the pages too</span>` : `${s.results.length} results.`}</div>`;
+  if (s.error) h += `<div class="note warn" style="margin-top:12px">${esc(s.error)}</div>`;
+  if (s.packs.length > 1) h += `<div class="fchips"><button class="${S.filter ? "" : "on"}" onclick="S.filter='';drawSearch()">All packs</button>${s.packs.map(p => `<button class="${S.filter === p.id ? "on" : ""}" onclick="S.filter='${esc(p.id)}';drawSearch()">${esc(p.title.replace(/\s*\(.*/, ""))} · ${fmtN(p.count)}</button>`).join("")}</div>`;
+  h += `<div class="res">${list.map(r => `<button class="r" style="--c:var(--s-${shelfOf[r.id] || "other"})" onclick="openPage('${esc(r.id)}', ${esc(JSON.stringify(r.path))})"><b>${esc(r.title)}</b><span class="p">${esc(PUBLIC ? fill(tr("from"), { p: r.pack.replace(/\s*\(.*\)\s*$/, "") }) : r.pack)}</span>${r.snippet ? `<div class="s">${hl(r.snippet, s.q)}</div>` : ""}</button>`).join("")}</div>`;
+  if (!s.busy && !s.results.length && !s.error) h += `<div class="empty">${PUBLIC ? fill(esc(tr("none")), { q: "<b>" + esc(s.q) + "</b>" }) : "Nothing found. Try fewer or different words, or search Everything."}</div>`;
+  if (S.filter) h += `<div style="margin-top:10px"><button class="btn" onclick="go('#search/'+encodeURIComponent('pack:${esc(S.filter)}')+'/'+encodeURIComponent(S.search.q))">More from this pack</button></div>`;
+  if ((s.skipped || []).length) h += `<div class="note warn" style="margin-top:14px">These were too slow to search on this drive just now, so they were skipped: ${s.skipped.map(esc).join(", ")}. Search inside one of them on its own to include it.</div>`;
+  if (!s.busy && s.unreached) h += `<div class="note" style="margin-top:14px">${s.unreached} packs weren't reached in time on this drive. Pick a shelf in the box next to the search to look through them.</div>`;
+  v.innerHTML = h + (s.busy ? "" : limitsHtml());
+}
+function hl(t, q) {
+  let h = esc(t);
+  for (const w of q.split(/\s+/).filter(w => w.length > 2)) h = h.replace(new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi"), "<b style='color:var(--fg)'>$1</b>");
+  return h;
+}
+
+// ---------- reading
+function openPage(id, path) { go("#read/" + encodeURIComponent(id) + "/" + encodeURIComponent(path)); }
+async function randomPage(scope) {
+  const sc = scope || (S.pack ? "pack:" + S.pack.id : "all");
+  const r = await api("random", { scope: sc, ages: sc.startsWith("pack:") ? "" : S.ages });
+  if (r.error) return toast(r.error);
+  openPage(r.id, r.path);
+}
+function pageUrl(id, path) {
+  const base = "http://127.0.0.1:" + S.cat.port;
+  const p = path ? path.split("/").map(encodeURIComponent).join("/") : "";
+  return id.startsWith("r:") ? `${base}/r/${encodeURIComponent(id.slice(2))}/${p}` : `${base}/z/${encodeURIComponent(id)}/${p}`;
+}
+function fromUrl(href) {   // the page's address -> [pack id, path]
+  try {
+    const u = new URL(href); const parts = u.pathname.split("/").slice(1);
+    const kind = parts.shift(), first = decodeURIComponent(parts.shift() || ""), path = parts.map(decodeURIComponent).join("/");
+    return [kind === "r" ? "r:" + first : first, path];
+  } catch (e) { return [null, ""]; }
+}
+async function reader(id, path, aboutOpen) {
+  if (!S.pack || S.pack.id !== id) {
+    S.pack = await api("pack", { id });
+    if (S.pack.error) { $("#view").className = "view"; $("#view").innerHTML = `<div class="note warn">${esc(S.pack.error)}</div>`; S.pack = null; return; }
+    if (S.pack.mark) { post("seen", { id }); S.pack.mark = ""; }
+  }
+  fillScope();
+  $("#scope").value = "pack:" + id;
+  S.about = aboutOpen;
+  const v = $("#view"); v.className = "view reader";
+  v.innerHTML = `<div class="rbar">
+      <button class="btn" onclick="history.back()" title="Back">&larr;</button>
+      <button class="btn" onclick="history.forward()" title="Forward">&rarr;</button>
+      <button class="btn" onclick="toFront()" title="This pack's front page">${esc(tr("frontpage", "Front page"))}</button>
+      <div class="t"><b id="ptitle">${esc(path ? "" : S.pack.title)}</b><span onclick="toggleAbout()" title="About this pack">${esc(S.pack.title)} · about</span></div>
+      <button class="btn" onclick="randomPage('pack:${esc(id)}')">${esc(tr("randompack", "Random in this pack"))}</button>
+      <button class="btn" id="savebtn" onclick="savePage()">${esc(tr("save", "Save"))}</button>
+      ${S.cat.cards ? `<button class="btn" onclick="cardsBox()">Flashcards</button>` : ""}
+    </div><div id="cardsbox"></div><div id="about"></div>
+    <iframe class="page" id="frame" title="Page" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>`;
+  drawAbout();
+  S.page = { id, path, title: "" };
+  $("#frame").src = path ? pageUrl(id, path) : S.pack.front;
+}
+function toFront() { go("#pack/" + encodeURIComponent(S.pack.id)); }
+function toggleAbout() { S.about = !S.about; drawAbout(); }
+function drawAbout() {
+  const p = S.pack, el = $("#about"); if (!el) return;
+  if (!S.about) { el.innerHTML = ""; return; }
+  const meta = [p.shelf_title, p.size, p.articles ? fmtN(p.articles) + " pages" : "", p.date ? "version " + p.date : "", p.lang ? "language: " + p.lang : "",
+    (p.ages || []).length ? "for " + p.ages.join(", ") : ""].filter(Boolean);
+  let notes = "";
+  if ((p.variants || []).length) notes += `<div class="sub">Also in the vault: ${p.variants.map(x => `<a href="#pack/${encodeURIComponent(x.id)}">${esc(x.title)}</a> (${esc(x.size)})`).join(", ")}. This bigger copy is the one that gets searched.</div>`;
+  if ((p.older || []).length) notes += `<div class="note warn">An older copy is still in the vault folder: ${p.older.map(o => `${esc(o.name)}.zim (${esc(o.size)})`).join(", ")}. Archie uses the newest one, so you can delete the older file to free space.</div>`;
+  if (p.license) {
+    const what = { green: "Free to share: credit it as below.", yellow: "Free to share as long as it's never sold, charged for or shown with ads.",
+      orange: "Fine for your own reading. Don't hand out copies of this pack without the owner's written permission.",
+      grey: "No licence could be found. Fine for your own reading; don't hand out copies until it's checked." }[p.verdict] || "";
+    notes += `<div class="licbox ${esc(p.verdict)}"><b>Licence:</b> ${p.license_url ? `<a href="${esc(p.license_url)}" target="_blank" rel="noopener">${esc(p.license)}</a>` : esc(p.license)}. ${esc(what)}${p.credit ? `<br><b>Credit:</b> ${esc(p.credit)}` : ""}</div>`;
+  }
+  if (p.kind === "zim" && !p.fulltext) notes += `<div class="sub">This pack has no search index inside it, so the Vault can only search its page titles.</div>`;
+  el.innerHTML = `<div class="about">${icon(p)}<div class="bd"><h2>${esc(p.title)}</h2>
+      ${p.zim_title && p.zim_title !== p.title ? `<div class="sub">${esc(p.zim_title)}</div>` : ""}
+      <p>${esc(p.long || p.desc || "")}</p><div class="m">${meta.map(m => `<span>${esc(m)}</span>`).join("")}</div>${notes}
+      ${(p.related || []).length ? `<div class="kick">RELATED PACKS</div><div class="rel">${p.related.map(r => `<button onclick="go('#pack/${encodeURIComponent(r.id)}')">${icon(r)}${esc(r.title)}</button>`).join("")}</div>` : ""}
+    </div><div><button class="x" onclick="toggleAbout()" title="Hide">hide</button></div></div>`;
+}
+window.addEventListener("message", e => {
+  const f = $("#frame");
+  if (!f || e.source !== f.contentWindow || !e.data || !e.data.archieVault) return;
+  const [id, path] = fromUrl(e.data.href);
+  if (!id) return;
+  S.page = { id, path, title: e.data.title || decodeURIComponent(path.split("/").pop() || "").replace(/_/g, " ").replace(/\.html?$/, "") };
+  $("#ptitle").textContent = S.page.title || S.pack.title;
+  if (id !== S.pack.id) api("pack", { id }).then(p => { if (!p.error) { S.pack = p; drawAbout(); } });
+  const saved = (S.cat.saved || []).some(s => s.id === id && s.path === path);
+  $("#savebtn").textContent = saved ? tr("savedbtn", "Saved") : tr("save", "Save");
+  $("#cardsbox").innerHTML = "";
+});
+async function savePage() {
+  if (!S.page || !S.page.path) return toast("Wait for the page to finish opening, then save it.");
+  const r = await post("save", { id: S.page.id, path: S.page.path || "", title: S.page.title });
+  if (r.error) return toast(r.error);
+  S.cat.saved = r.saved; $("#savebtn").textContent = tr("savedbtn", "Saved"); fillLeft(); toast("Saved. It's on the Vault's front page.");
+}
+function cardsBox() {
+  const deck = "Vault - " + S.pack.title.replace(/\s*\(.*/, "");
+  $("#cardsbox").innerHTML = `<div class="cardsbox"><span>Make flashcards from <b>${esc(S.page.title || "this page")}</b> into the deck</span>
+    <input id="deck" value="${esc(deck)}" aria-label="Deck name"><button class="btn go" id="mk" onclick="makeCards()">Make cards</button>
+    <button class="x" onclick="$('#cardsbox').innerHTML=''">cancel</button></div>`;
+}
+async function makeCards() {
+  const b = $("#mk"); b.disabled = true; b.textContent = "Archie is writing cards...";
+  const r = await post("cards", { id: S.page.id, path: S.page.path, title: S.page.title, deck: $("#deck").value });
+  if (r.error) { b.disabled = false; b.textContent = "Make cards"; return toast(r.error, 5000); }
+  $("#cardsbox").innerHTML = `<div class="cardsbox">Added ${r.count} cards to <b>${esc(r.deck)}</b>. They show up in Study flashcards.${(r.cards || [])[0] ? ` First one: <i>${esc(r.cards[0].q)}</i>` : ""}<button class="x" onclick="$('#cardsbox').innerHTML=''">close</button></div>`;
+}
+
+// ---------- routes
+async function route() {
+  const h = location.hash || "#home";
+  const v = $("#view");
+  if (!S.cat) await loadCat();
+  if (!S.cat || S.cat.error) return;
+  if (h.startsWith("#read/")) {
+    const [, id, ...rest] = h.split("/");
+    const want = [decodeURIComponent(id), decodeURIComponent(rest.join("/"))];
+    if (S.page && S.page.id === want[0] && S.page.path === want[1] && $("#frame")) return;   // the page is already showing
+    return reader(want[0], want[1], false);
+  }
+  if (h.startsWith("#pack/")) return reader(decodeURIComponent(h.slice(6)), "", true);
+  v.className = "view"; S.page = null;
+  if (h.startsWith("#search/")) { const [, sc, ...q] = h.split("/"); return searchView(decodeURIComponent(sc), decodeURIComponent(q.join("/"))); }
+  if (h === "#saved") return savedView();
+  return home();
+}
+for (const b of document.querySelectorAll("#ages button")) {
+  b.classList.toggle("on", b.dataset.a === S.ages);
+  b.onclick = async () => {
+    S.ages = b.dataset.a; try { localStorage.setItem("vault.ages", S.ages); } catch (e) {}
+    for (const x of document.querySelectorAll("#ages button")) x.classList.toggle("on", x === b);
+    await loadCat();
+    if ((location.hash || "#home") === "#home") home(); else if (location.hash.startsWith("#search/")) route();
+  };
+}
+window.addEventListener("hashchange", route);
+document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement.tagName !== "INPUT") { e.preventDefault(); $("#q").focus(); } });
+applyLang();
+route();
+</script>
+</body>
+</html>

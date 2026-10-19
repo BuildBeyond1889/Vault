@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vault Search</title>
+<style>
+@font-face { font-family: "Young Serif"; src: url(/fonts/YoungSerif-400.woff2) format("woff2"); font-weight: 400; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Young Serif"; src: url(/fonts/YoungSerif-ext-400.woff2) format("woff2"); font-weight: 400; unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Atkinson"; src: url(/fonts/Atkinson-400.woff2) format("woff2"); font-weight: 400; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF, U+FFFD; }
+@font-face { font-family: "Atkinson"; src: url(/fonts/Atkinson-ext-400.woff2) format("woff2"); font-weight: 400; unicode-range: U+0100-02AF, U+1E00-1EFF, U+20A0-20C0, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Atkinson"; src: url(/fonts/Atkinson-700.woff2) format("woff2"); font-weight: 700; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122; }
+/* Vault Search. Layout: a deep-teal reading-room band with a shelf of book spines along its edge; the search box sits on the shelf.
+   Results are index cards whose left spine is the colour of their shelf. Everything is bundled: nothing loads from the internet. */
+:root {
+  --band: #123d3c; --band-ink: #f1efe6; --band-muted: #a9c3bf;
+  --paper: #eef0ec; --card: #ffffff; --ink: #1a1d1b; --muted: #59615c; --rule: #d3d8d3;
+  --ochre: #e0a63e; --ochre-ink: #1a1d1b; --link: #12605d; --mark: #fbe3a6;
+  --s-core: #3d5a80; --s-health: #b5483b; --s-land: #5f7f3a; --s-repair: #c47f2c; --s-code: #6a4c93; --s-learn: #2a7f86; --s-maps: #8a6f4e;
+  --display: "Young Serif", Georgia, "Noto Serif", serif;
+  --body: "Atkinson", "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", "Noto Sans Devanagari", "Microsoft YaHei", Arial, sans-serif;
+  --scale: 1;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --band: #0b2625; --band-ink: #ecebe2; --band-muted: #8fb0ab;
+  --paper: #111413; --card: #1a1e1c; --ink: #e8ebe7; --muted: #a3aca6; --rule: #2b312e;
+  --ochre: #e7b04c; --ochre-ink: #111413; --link: #7fd0c8; --mark: #5a4a1c; color-scheme: dark } }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: calc(18px * var(--scale)); line-height: 1.55; min-height: 100vh; display: flex; flex-direction: column; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ochre); outline-offset: 2px; }
+a { color: var(--link); }
+[hidden] { display: none !important; }
+.wrap { width: 100%; max-width: 860px; margin: 0 auto; padding-inline: 18px; }
+
+/* the band */
+.band { background: var(--band); color: var(--band-ink); position: relative; }
+.bar { display: flex; align-items: center; gap: 12px; padding-block: 14px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-size: calc(20px * var(--scale)); background: none; border: 0; padding: 0; cursor: pointer; color: var(--band-ink); white-space: nowrap; }
+.grow { flex: 1; }
+.lang { position: relative; }
+.bubble { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--band-muted); background: transparent; color: var(--band-ink); font-weight: 700; font-size: 14px; cursor: pointer; letter-spacing: .04em; }
+.bubble:hover { border-color: var(--ochre); }
+.menu { position: absolute; top: 52px; inset-inline-start: 0; background: var(--card); color: var(--ink); border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.28); padding: 6px; z-index: 20; min-width: 210px; }
+.menu button { display: flex; justify-content: space-between; gap: 16px; width: 100%; text-align: start; background: none; border: 0; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+.menu button:hover, .menu button[aria-checked="true"] { background: var(--paper); }
+.menu button span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+#fixline a { font-weight: 700; }
+.sizes { display: flex; gap: 4px; }
+.sizes button { background: transparent; border: 1px solid var(--band-muted); color: var(--band-ink); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-weight: 700; font-size: 15px; }
+.home { padding-block: 36px 0; }
+.home h1 { font-family: var(--display); font-weight: 400; font-size: calc(clamp(36px, 6vw, 58px) * var(--scale)); line-height: 1.08; margin: 0 0 10px; text-wrap: balance; }
+.home .sub { color: var(--band-muted); margin: 0 0 24px; }
+form.box { display: flex; gap: 0; border-radius: 12px; overflow: hidden; background: var(--card); box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+form.box input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font-size: calc(22px * var(--scale)); padding: 15px 18px; outline: none; }
+form.box:focus-within { outline: 3px solid var(--ochre); outline-offset: 2px; }
+form.box button { background: var(--ochre); color: var(--ochre-ink); border: 0; padding: 0 26px; font-weight: 700; cursor: pointer; font-size: calc(19px * var(--scale)); }
+.ideas { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; color: var(--band-muted); }
+.idea { background: rgba(255,255,255,.08); color: var(--band-ink); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 5px 14px; cursor: pointer; font-size: calc(16px * var(--scale)); }
+.idea:hover { border-color: var(--ochre); }
+.links { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px; padding-bottom: 26px; }
+.links button, .links a { background: none; border: 0; padding: 0; color: var(--band-ink); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: calc(16px * var(--scale)); }
+.shelf { height: 64px; display: flex; align-items: flex-end; gap: 2px; overflow: hidden; padding-inline: 18px; border-bottom: 8px solid #6b4f33; }
+.spine { flex: none; border-radius: 2px 2px 0 0; position: relative; transform-origin: bottom; }
+.spine::before, .spine::after { content: ""; position: absolute; left: 3px; right: 3px; height: 2px; background: rgba(255,255,255,.35); }
+.spine::before { top: 9px; } .spine::after { top: 14px; }
+@media (prefers-reduced-motion: no-preference) { .spine { animation: rise .7s cubic-bezier(.2,.8,.2,1) both; } }
+@keyframes rise { from { transform: scaleY(.15); } to { transform: scaleY(1); } }
+.note { margin: 18px 0 0; padding: 12px 16px; border-radius: 10px; background: rgba(255,255,255,.1); color: var(--band-ink); font-size: calc(16px * var(--scale)); }
+
+/* results */
+.top form.box { flex: 1 1 300px; }
+.top form.box input { font-size: calc(18px * var(--scale)); padding: 10px 14px; }
+.top form.box button { padding: 0 18px; font-size: calc(17px * var(--scale)); }
+main { flex: 1; }
+.status { margin: 20px 0 10px; color: var(--muted); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: calc(15.5px * var(--scale)); }
+.chip i { width: 10px; height: 14px; border-radius: 2px; background: var(--c, var(--muted)); }
+.chip.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 700; }
+.results { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.results button { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; background: var(--card); border: 1px solid var(--rule); border-inline-start: 7px solid var(--c, var(--muted)); border-radius: 8px; padding: 14px 18px; }
+.results button:hover { border-color: var(--ink); border-inline-start-color: var(--c, var(--muted)); }
+.results button:focus-visible { outline: 3px solid var(--ochre); outline-offset: 2px; }
+.results b { display: block; font-family: var(--display); font-weight: 400; font-size: calc(22px * var(--scale)); line-height: 1.25; color: var(--ink); }
+.results .from { font-size: calc(14.5px * var(--scale)); color: var(--muted); }
+.results .snip { display: block; margin-top: 6px; }
+mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 2px; }
+.spin::after { content: ""; display: inline-block; width: .8em; height: .8em; border: 3px solid var(--ochre); border-right-color: transparent; border-radius: 50%; animation: s .8s linear infinite; margin-inline-start: 10px; vertical-align: -2px; }
+@keyframes s { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin::after { animation: none; } }
+.soft { color: var(--muted); font-size: calc(15px * var(--scale)); }
+footer { padding-block: 30px; color: var(--muted); font-size: calc(15px * var(--scale)); }
+footer p { margin: 0 0 6px; max-width: 46em; }
+
+/* reading */
+.reader { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--paper); z-index: 30; }
+.reader .bar { padding-inline: 14px; background: var(--band); color: var(--band-ink); }
+.reader .t { flex: 1; min-width: 0; }
+.reader .t b { display: block; font-family: var(--display); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reader .t span { font-size: calc(14px * var(--scale)); color: var(--band-muted); }
+.back { background: var(--ochre); color: var(--ochre-ink); border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+.reader iframe { flex: 1; border: 0; width: 100%; background: #fff; }
+.reader .foot { padding: 6px 14px; font-size: calc(13px * var(--scale)); color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) { .sizes { display: none; } .home { padding-top: 20px; } }
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap bar">
+    <div class="lang">
+      <button class="bubble" id="bubble" aria-haspopup="true" aria-expanded="false" title="Language">EN</button>
+      <div class="menu" id="menu" role="menu" hidden></div>
+    </div>
+    <button class="brand" onclick="goHome()">Vault Search</button>
+    <form class="box top-only" id="topform" hidden onsubmit="event.preventDefault(); search(document.getElementById('q2').value)">
+      <input id="q2" type="search" autocomplete="off"><button type="submit" data-t="search"></button>
+    </form>
+    <span class="grow"></span>
+    <div class="sizes" role="group"><button onclick="zoom(-1)" data-tt="smaller">A-</button><button onclick="zoom(1)" data-tt="bigger">A+</button></div>
+  </div>
+  <div class="wrap home" id="home">
+    <h1 data-t="title"></h1>
+    <p class="sub" id="stat"></p>
+    <form class="box" onsubmit="event.preventDefault(); search(document.getElementById('q').value)">
+      <input id="q" type="search" autocomplete="off" autofocus><button type="submit" data-t="search"></button>
+    </form>
+    <div class="ideas" id="ideas"></div>
+    <div id="setup"></div>
+    <div class="links"><button onclick="surprise()" data-t="random"></button><a href="/vault.html" data-t="browse"></a></div>
+  </div>
+  <div class="shelf" id="shelf" aria-hidden="true"></div>
+</header>
+
+<main class="wrap" id="res" hidden>
+  <p class="status" id="status" aria-live="polite"></p>
+  <div class="chips" id="chips"></div>
+  <ul class="results" id="list"></ul>
+  <p class="soft" id="more"></p>
+</main>
+
+<footer class="wrap" id="foot">
+  <p data-t="limits"></p>
+  <p id="langnote"></p>
+  <p id="fixline" hidden><a id="fixlink" target="_blank" rel="noopener"></a> <span id="fixhow"></span></p>
+</footer>
+
+<div class="reader" id="reader" hidden>
+  <div class="bar">
+    <button class="back" id="backbtn" onclick="closePage()"></button>
+    <div class="t"><b id="rtitle"></b><span id="rfrom"></span></div>
+    <div class="sizes" role="group"><button onclick="zoom(-1)" data-tt="smaller">A-</button><button onclick="zoom(1)" data-tt="bigger">A+</button></div>
+  </div>
+  <iframe id="frame" title="Page" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>
+  <div class="foot" id="rcredit"></div>
+</div>
+
+<script>
+"use strict";
+// ---------- words in each language. Translations were made without a native speaker: corrections welcome.
+const PROJECT = "https://github.com/BuildBeyond1889/vault";   // where translation fixes go
+const LANGS = [
+  ["en", "English", "eng", "ltr"], ["sw", "Kiswahili", "swa", "ltr"], ["fr", "Français", "fra", "ltr"], ["es", "Español", "spa", "ltr"],
+  ["pt", "Português", "por", "ltr"], ["ar", "العربية", "ara", "rtl"], ["hi", "हिन्दी", "hin", "ltr"], ["zh", "中文", "zho", "ltr"]];
+const T = {
+  en: { draft: "draft", fix: "", fixhow: "", title: "Search the library", stat: "{n} collections, {size}, all on this computer. No internet needed.", ph: "What do you want to know?", search: "Search", try: "Try:",
+    random: "Show me something random", browse: "Browse every shelf", limits: "This is a library, not a doctor, engineer or teacher. Pages can be out of date. When something is urgent or dangerous, reach someone trained if you can.",
+    found: "{n} pages found for {q}.", none: "Nothing found for {q}. Try fewer words, or another word for the same thing.", looking: "Looking", sofar: "{n} found so far. Still looking inside the pages",
+    all: "Everything", from: "from {p}", back: "Back", backres: "Back to results", slow: "Some very large collections were too slow to search just now: {list}. Pick a subject to search fewer at once.",
+    nolib: "No library found yet. Put this program next to the zim folder of a Vault drive, or run one of the Get files.", smaller: "Smaller text", bigger: "Bigger text", version: "Version {d}.",
+    langnote: "", ideas: ["clean drinking water", "malaria", "fix a bicycle chain", "solar panel", "fractions", "first aid for burns", "how to plant maize"],
+    shelves: { core: "Encyclopedias and books", health: "Health", land: "Farming, water and energy", repair: "Repair and electronics", code: "Computers and coding", learn: "School and learning", maps: "Maps" } },
+  sw: { draft: "rasimu", fix: "Saidia kurekebisha tafsiri hii", fixhow: "Umeona neno lisilo sahihi? Andika neno sahihi hapo, au mwambie aliyekupa diski hii.", title: "Tafuta maktabani", stat: "Mikusanyiko {n}, {size}, yote iko kwenye kompyuta hii. Hakuna haja ya intaneti.", ph: "Unataka kujua nini?", search: "Tafuta", try: "Jaribu:",
+    random: "Nionyeshe kitu chochote", browse: "Angalia rafu zote", limits: "Hii ni maktaba, si daktari, mhandisi wala mwalimu. Kurasa zinaweza kuwa zimepitwa na wakati. Jambo likiwa la dharura au la hatari, mtafute mtu aliyefunzwa ikiwezekana.",
+    found: "Kurasa {n} zimepatikana kwa {q}.", none: "Hakuna kilichopatikana kwa {q}. Jaribu maneno machache, au neno jingine lenye maana hiyo hiyo.", looking: "Inatafuta", sofar: "{n} zimepatikana hadi sasa. Bado inatafuta ndani ya kurasa",
+    all: "Kila kitu", from: "kutoka {p}", back: "Rudi", backres: "Rudi kwenye matokeo", slow: "Baadhi ya mikusanyiko mikubwa sana ilichelewa: {list}. Chagua somo ili kutafuta michache kwa wakati mmoja.",
+    nolib: "Bado hakuna maktaba. Weka programu hii karibu na folda ya zim ya diski ya Vault, au endesha mojawapo ya faili za Get.", smaller: "Herufi ndogo", bigger: "Herufi kubwa", version: "Toleo {d}.",
+    langnote: "Mikusanyiko mingi iko kwa Kiingereza. Matokeo kwa Kiswahili huonyeshwa kwanza yanapopatikana. Tafsiri hii inaweza kuwa na makosa.",
+    ideas: ["maji safi", "malaria", "kilimo cha mahindi", "nishati ya jua", "huduma ya kwanza", "hesabu"],
+    shelves: { core: "Ensaiklopidia na vitabu", health: "Afya", land: "Kilimo, maji na nishati", repair: "Matengenezo na elektroniki", code: "Kompyuta na programu", learn: "Shule na kujifunza", maps: "Ramani" } },
+  fr: { draft: "brouillon", fix: "Aidez à corriger cette traduction", fixhow: "Un mot vous semble faux ? Proposez le bon mot ici, ou dites-le à la personne qui vous a donné ce disque.", title: "Chercher dans la bibliothèque", stat: "{n} collections, {size}, tout est sur cet ordinateur. Pas besoin d'internet.", ph: "Que voulez-vous savoir ?", search: "Chercher", try: "Essayez :",
+    random: "Montrez-moi une page au hasard", browse: "Voir toutes les étagères", limits: "Ceci est une bibliothèque, pas un médecin, un ingénieur ou un enseignant. Les pages peuvent être anciennes. En cas d'urgence ou de danger, contactez si possible une personne formée.",
+    found: "{n} pages trouvées pour {q}.", none: "Rien trouvé pour {q}. Essayez moins de mots, ou un autre mot pour la même chose.", looking: "Recherche", sofar: "{n} trouvées pour l'instant. Recherche dans les pages",
+    all: "Tout", from: "de {p}", back: "Retour", backres: "Retour aux résultats", slow: "Certaines très grandes collections étaient trop lentes : {list}. Choisissez un sujet pour en chercher moins à la fois.",
+    nolib: "Aucune bibliothèque trouvée. Placez ce programme à côté du dossier zim d'un disque Vault, ou lancez un des fichiers Get.", smaller: "Texte plus petit", bigger: "Texte plus grand", version: "Version {d}.",
+    langnote: "La plupart des collections sont en anglais. Les résultats en français passent en premier quand ils existent. Cette traduction peut contenir des erreurs.",
+    ideas: ["eau potable", "paludisme", "réparer un vélo", "panneau solaire", "premiers secours", "fractions"],
+    shelves: { core: "Encyclopédies et livres", health: "Santé", land: "Agriculture, eau et énergie", repair: "Réparation et électronique", code: "Informatique et programmation", learn: "École et apprentissage", maps: "Cartes" } },
+  es: { draft: "borrador", fix: "Ayuda a corregir esta traducción", fixhow: "¿Ves una palabra equivocada? Sugiere la correcta aquí, o díselo a quien te dio este disco.", title: "Buscar en la biblioteca", stat: "{n} colecciones, {size}, todo en esta computadora. No hace falta internet.", ph: "¿Qué quieres saber?", search: "Buscar", try: "Prueba:",
+    random: "Muéstrame algo al azar", browse: "Ver todos los estantes", limits: "Esto es una biblioteca, no un médico, ingeniero ni maestro. Las páginas pueden estar desactualizadas. Si algo es urgente o peligroso, busca a una persona capacitada si puedes.",
+    found: "{n} páginas encontradas para {q}.", none: "No se encontró nada para {q}. Prueba con menos palabras, u otra palabra para lo mismo.", looking: "Buscando", sofar: "{n} encontradas hasta ahora. Buscando dentro de las páginas",
+    all: "Todo", from: "de {p}", back: "Volver", backres: "Volver a los resultados", slow: "Algunas colecciones muy grandes tardaron demasiado: {list}. Elige un tema para buscar en menos a la vez.",
+    nolib: "Todavía no hay biblioteca. Pon este programa junto a la carpeta zim de un disco Vault, o ejecuta uno de los archivos Get.", smaller: "Texto más pequeño", bigger: "Texto más grande", version: "Versión {d}.",
+    langnote: "La mayoría de las colecciones están en inglés. Los resultados en español aparecen primero cuando existen. Esta traducción puede tener errores.",
+    ideas: ["agua potable", "malaria", "reparar una bicicleta", "panel solar", "primeros auxilios", "fracciones"],
+    shelves: { core: "Enciclopedias y libros", health: "Salud", land: "Agricultura, agua y energía", repair: "Reparación y electrónica", code: "Computación y programación", learn: "Escuela y aprendizaje", maps: "Mapas" } },
+  pt: { draft: "rascunho", fix: "Ajude a corrigir esta tradução", fixhow: "Viu uma palavra errada? Sugira a certa aqui, ou avise quem lhe deu este disco.", title: "Pesquisar na biblioteca", stat: "{n} coleções, {size}, tudo neste computador. Não precisa de internet.", ph: "O que você quer saber?", search: "Pesquisar", try: "Experimente:",
+    random: "Mostre algo aleatório", browse: "Ver todas as estantes", limits: "Isto é uma biblioteca, não um médico, engenheiro ou professor. As páginas podem estar desatualizadas. Se algo for urgente ou perigoso, procure uma pessoa treinada se puder.",
+    found: "{n} páginas encontradas para {q}.", none: "Nada encontrado para {q}. Tente menos palavras, ou outra palavra para a mesma coisa.", looking: "Procurando", sofar: "{n} encontradas até agora. Procurando dentro das páginas",
+    all: "Tudo", from: "de {p}", back: "Voltar", backres: "Voltar aos resultados", slow: "Algumas coleções muito grandes demoraram demais: {list}. Escolha um assunto para pesquisar em menos de uma vez.",
+    nolib: "Nenhuma biblioteca encontrada. Coloque este programa ao lado da pasta zim de um disco Vault, ou execute um dos arquivos Get.", smaller: "Texto menor", bigger: "Texto maior", version: "Versão {d}.",
+    langnote: "A maioria das coleções está em inglês. Resultados em português aparecem primeiro quando existem. Esta tradução pode ter erros.",
+    ideas: ["água potável", "malária", "consertar bicicleta", "painel solar", "primeiros socorros", "frações"],
+    shelves: { core: "Enciclopédias e livros", health: "Saúde", land: "Agricultura, água e energia", repair: "Reparos e eletrônica", code: "Computação e programação", learn: "Escola e aprendizagem", maps: "Mapas" } },
+  ar: { draft: "مسودة", fix: "ساعد في تصحيح هذه الترجمة", fixhow: "هل رأيت كلمة خاطئة؟ اقترح الكلمة الصحيحة هنا، أو أخبر من أعطاك هذا القرص.", title: "ابحث في المكتبة", stat: "{n} مجموعة، {size}، كلها على هذا الحاسوب. لا حاجة للإنترنت.", ph: "ماذا تريد أن تعرف؟", search: "ابحث", try: "جرّب:",
+    random: "أرني شيئًا عشوائيًا", browse: "تصفّح كل الرفوف", limits: "هذه مكتبة، وليست طبيبًا أو مهندسًا أو معلمًا. قد تكون الصفحات قديمة. إذا كان الأمر عاجلًا أو خطيرًا، فاطلب مساعدة شخص مدرّب إن أمكن.",
+    found: "وُجدت {n} صفحة عن {q}.", none: "لم يُعثر على شيء عن {q}. جرّب كلمات أقل، أو كلمة أخرى بنفس المعنى.", looking: "جارٍ البحث", sofar: "وُجد {n} حتى الآن. ما زال البحث داخل الصفحات",
+    all: "الكل", from: "من {p}", back: "رجوع", backres: "العودة إلى النتائج", slow: "بعض المجموعات الكبيرة جدًا كانت بطيئة: {list}. اختر موضوعًا للبحث في عدد أقل.",
+    nolib: "لا توجد مكتبة بعد. ضع هذا البرنامج بجانب مجلد zim في قرص Vault، أو شغّل أحد ملفات Get.", smaller: "نص أصغر", bigger: "نص أكبر", version: "الإصدار {d}.",
+    langnote: "معظم المجموعات باللغة الإنجليزية. تظهر النتائج بالعربية أولًا عند توفرها. قد تحتوي هذه الترجمة على أخطاء.",
+    ideas: ["مياه الشرب", "الملاريا", "الطاقة الشمسية", "الإسعافات الأولية"],
+    shelves: { core: "موسوعات وكتب", health: "الصحة", land: "الزراعة والمياه والطاقة", repair: "الإصلاح والإلكترونيات", code: "الحاسوب والبرمجة", learn: "المدرسة والتعلّم", maps: "خرائط" } },
+  hi: { draft: "मसौदा", fix: "इस अनुवाद को ठीक करने में मदद करें", fixhow: "कोई शब्द गलत दिखा? सही शब्द यहाँ सुझाएँ, या जिसने आपको यह ड्राइव दी उसे बताएँ।", title: "पुस्तकालय में खोजें", stat: "{n} संग्रह, {size}, सब इसी कंप्यूटर पर। इंटरनेट की ज़रूरत नहीं।", ph: "आप क्या जानना चाहते हैं?", search: "खोजें", try: "आज़माएँ:",
+    random: "कुछ भी दिखाओ", browse: "सभी अलमारियाँ देखें", limits: "यह एक पुस्तकालय है, डॉक्टर, इंजीनियर या शिक्षक नहीं। पन्ने पुराने हो सकते हैं। कोई बात ज़रूरी या ख़तरनाक हो तो हो सके तो किसी प्रशिक्षित व्यक्ति से मदद लें।",
+    found: "{q} के लिए {n} पन्ने मिले।", none: "{q} के लिए कुछ नहीं मिला। कम शब्द आज़माएँ, या उसी चीज़ के लिए कोई दूसरा शब्द।", looking: "खोज रहे हैं", sofar: "अब तक {n} मिले। पन्नों के अंदर खोज जारी है",
+    all: "सब कुछ", from: "{p} से", back: "वापस", backres: "नतीजों पर वापस", slow: "कुछ बहुत बड़े संग्रह अभी धीमे थे: {list}। एक बार में कम खोजने के लिए कोई विषय चुनें।",
+    nolib: "अभी कोई पुस्तकालय नहीं मिला। इस प्रोग्राम को Vault ड्राइव के zim फ़ोल्डर के पास रखें, या कोई Get फ़ाइल चलाएँ।", smaller: "छोटा अक्षर", bigger: "बड़ा अक्षर", version: "संस्करण {d}।",
+    langnote: "ज़्यादातर संग्रह अंग्रेज़ी में हैं। हिंदी में नतीजे हों तो पहले दिखते हैं। इस अनुवाद में गलतियाँ हो सकती हैं।",
+    ideas: ["साफ़ पीने का पानी", "मलेरिया", "सौर ऊर्जा", "प्राथमिक चिकित्सा"],
+    shelves: { core: "विश्वकोश और किताबें", health: "स्वास्थ्य", land: "खेती, पानी और ऊर्जा", repair: "मरम्मत और इलेक्ट्रॉनिक्स", code: "कंप्यूटर और कोडिंग", learn: "स्कूल और पढ़ाई", maps: "नक्शे" } },
+  zh: { draft: "草稿", fix: "帮助改进此翻译", fixhow: "发现翻译错误？请在这里提出正确的说法，或告诉给你这个硬盘的人。", title: "搜索图书馆", stat: "{n} 个资料集，{size}，全部在这台电脑上。无需联网。", ph: "你想了解什么？", search: "搜索", try: "试试：",
+    random: "随便看看", browse: "浏览所有书架", limits: "这是一个图书馆，不是医生、工程师或老师。页面内容可能已过时。遇到紧急或危险情况时，请尽量联系受过训练的人。",
+    found: "找到 {n} 个关于 {q} 的页面。", none: "没有找到关于 {q} 的内容。试试少用几个词，或换一个意思相同的词。", looking: "正在搜索", sofar: "目前找到 {n} 个。仍在页面中搜索",
+    all: "全部", from: "来自 {p}", back: "返回", backres: "返回结果", slow: "一些非常大的资料集太慢，暂时跳过：{list}。选择一个主题可以缩小搜索范围。",
+    nolib: "还没有找到图书馆。请把本程序放在 Vault 硬盘的 zim 文件夹旁边，或运行一个 Get 文件。", smaller: "缩小文字", bigger: "放大文字", version: "版本 {d}。",
+    langnote: "大部分资料是英文的。有中文结果时会优先显示。此翻译可能有错误。",
+    ideas: ["饮用水", "疟疾", "太阳能", "急救"],
+    shelves: { core: "百科与图书", health: "健康", land: "农业、水和能源", repair: "维修与电子", code: "电脑与编程", learn: "学校与学习", maps: "地图" } },
+};
+const SHELF_ORDER = ["core", "health", "land", "repair", "code", "learn", "maps"];
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fill = (s, v) => s.replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m);
+let L = "en", cat = null, shelfOf = {}, scale = 1, token = 0;
+let state = { q: "", shelf: "", results: [], busy: false, skipped: [] };
+try { scale = +localStorage.getItem("search.scale") || 1; L = localStorage.getItem("search.lang") || ""; } catch (e) {}
+if (!T[L]) { const nav = (navigator.language || "en").slice(0, 2); L = T[nav] ? nav : "en"; }
+const t = k => (T[L][k] != null ? T[L][k] : T.en[k]);
+
+function applyLang() {
+  const info = LANGS.find(x => x[0] === L);
+  document.documentElement.lang = L; document.documentElement.dir = info[3];
+  $("bubble").textContent = L.toUpperCase();
+  for (const el of document.querySelectorAll("[data-t]")) el.textContent = t(el.dataset.t);
+  for (const el of document.querySelectorAll("[data-tt]")) { el.title = t(el.dataset.tt); el.setAttribute("aria-label", t(el.dataset.tt)); }
+  $("q").placeholder = t("ph"); $("q").setAttribute("aria-label", t("search")); $("q2").setAttribute("aria-label", t("search"));
+  $("ideas").innerHTML = `<span>${esc(t("try"))}</span>` + t("ideas").map(w => `<button class="idea" onclick="search(${esc(JSON.stringify(w))})">${esc(w)}</button>`).join("");
+  $("langnote").textContent = t("langnote");
+  $("fixline").hidden = L === "en";
+  $("fixlink").textContent = t("fix"); $("fixhow").textContent = t("fixhow");
+  $("fixlink").href = PROJECT + "/issues/new?template=translation.md&title=" + encodeURIComponent("Translation fix: " + LANGS.find(x => x[0] === L)[1]) + "&labels=translation";
+  $("menu").innerHTML = LANGS.map(([c, name]) => `<button role="menuitemradio" aria-checked="${c === L}" onclick="setLang('${c}')">${esc(name)}<span>${c === "en" ? "EN" : esc(T[c].draft) + " · " + c.toUpperCase()}</span></button>`).join("");
+  showStat();
+  if (!$("res").hidden) draw();
+}
+function setLang(c) { L = c; try { localStorage.setItem("search.lang", c); } catch (e) {} toggleMenu(false); applyLang(); if (state.q) search(state.q, state.shelf); }
+function toggleMenu(open) { $("menu").hidden = !open; $("bubble").setAttribute("aria-expanded", String(open)); if (open) $("menu").querySelector("[aria-checked=true]").focus(); }
+$("bubble").onclick = e => { e.stopPropagation(); toggleMenu($("menu").hidden); };
+document.addEventListener("click", e => { if (!$("menu").hidden && !$("menu").contains(e.target)) toggleMenu(false); });
+
+function zoom(d) {
+  scale = Math.min(1.6, Math.max(0.85, +(scale + d * 0.15).toFixed(2)));
+  document.documentElement.style.setProperty("--scale", scale);
+  try { localStorage.setItem("search.scale", scale); } catch (e) {}
+}
+document.documentElement.style.setProperty("--scale", scale);
+
+function buildShelf() {   // a row of book spines, the same every time
+  const colors = SHELF_ORDER.map(s => `var(--s-${s})`).concat(["#d8cdb0", "#1f2a2a", "#9c4f2f"]);
+  let seed = 7, html = "", width = 0;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  while (width < 2200) {
+    const w = 12 + Math.floor(rnd() * 16), h = 62 + Math.floor(rnd() * 38), lean = rnd() < .04;
+    html += `<span class="spine" style="width:${w}px;height:${h}%;background:${colors[Math.floor(rnd() * colors.length)]};animation-delay:${(width / 2200 * .5).toFixed(2)}s${lean ? ";transform:rotate(-8deg)" : ""}"></span>`;
+    width += w + 2;
+    if (rnd() < .06) { html += `<span style="flex:none;width:${18 + Math.floor(rnd() * 40)}px"></span>`; width += 40; }
+  }
+  $("shelf").innerHTML = html;
+}
+
+async function api(what, params) {
+  const r = await fetch("/api/vault/" + what + (params ? "?" + new URLSearchParams(params) : ""));
+  return r.json();
+}
+function packName(s) { return String(s || "").replace(/\s*\(.*\)\s*$/, ""); }
+function showStat() {
+  if (!cat) return;
+  if (cat.error || !cat.packs) { $("stat").textContent = ""; $("setup").innerHTML = `<p class="note">${esc(cat.error || t("nolib"))}</p>`; return; }
+  $("setup").innerHTML = "";
+  $("stat").textContent = fill(t("stat"), { n: cat.packs, size: cat.size });
+}
+async function load() {
+  buildShelf(); applyLang();
+  cat = await api("catalog");
+  shelfOf = {}; for (const s of cat.shelves || []) for (const p of s.packs) shelfOf[p.id] = s.id;
+  showStat();
+  if (location.hash.startsWith("#q=")) search(decodeURIComponent(location.hash.slice(3)));
+}
+function goHome() { $("home").hidden = false; $("shelf").hidden = false; $("res").hidden = true; $("topform").hidden = true; $("q").value = ""; $("q").focus(); state.q = ""; history.replaceState(null, "", "#"); }
+
+async function search(q, shelf) {
+  q = (q || "").trim(); if (!q) return;
+  const tok = ++token;
+  state = { q, shelf: shelf || "", results: [], busy: true, skipped: [] };
+  $("home").hidden = true; $("shelf").hidden = true; $("res").hidden = false; $("topform").hidden = false; $("q2").value = q;
+  history.replaceState(null, "", "#q=" + encodeURIComponent(q));
+  draw();
+  const scope = state.shelf ? "shelf:" + state.shelf : "all";
+  const lang = LANGS.find(x => x[0] === L)[2];
+  for (const mode of ["title", "text"]) {
+    const d = await api("search", { q, scope, mode, lang });
+    if (tok !== token) return;
+    if (d.error) { state.error = d.error; break; }
+    const key = r => r.id + "|" + String(r.title).toLowerCase().trim();
+    const seen = new Map(state.results.map(r => [key(r), r]));
+    for (const r of d.results || []) {
+      const old = seen.get(key(r)) || state.results.find(x => x.id === r.id && x.path === r.path);
+      if (!old) { state.results.push(r); seen.set(key(r), r); }
+      else if ((r.score || 0) > (old.score || 0)) { old.score = r.score; if (!old.snippet) old.snippet = r.snippet; }
+    }
+    state.results.sort((a, b) => (b.score || 0) - (a.score || 0));
+    state.skipped = [...new Set([...state.skipped, ...(d.skipped || [])])];
+    draw();
+  }
+  state.busy = false; draw();
+}
+function hl(text, q) {
+  let h = esc(text);
+  for (const w of q.split(/\s+/).filter(w => w.length > 2)) h = h.replace(new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi"), "<mark>$1</mark>");
+  return h;
+}
+function draw() {
+  const s = state, Q = `<b>${esc(s.q)}</b>`;
+  $("status").innerHTML = s.error ? esc(s.error) : s.busy ? `<span class="spin">${s.results.length ? fill(esc(t("sofar")), { n: s.results.length }) : esc(t("looking"))}</span>` :
+    s.results.length ? fill(esc(t("found")), { n: s.results.length, q: Q }) : fill(esc(t("none")), { q: Q });
+  const have = SHELF_ORDER.filter(k => cat && (cat.shelves || []).some(x => x.id === k));
+  $("chips").innerHTML = `<button class="chip ${s.shelf ? "" : "on"}" onclick="search(state.q, '')">${esc(t("all"))}</button>` +
+    have.map(k => `<button class="chip ${s.shelf === k ? "on" : ""}" style="--c:var(--s-${k})" onclick="search(state.q, '${k}')"><i></i>${esc(t("shelves")[k])}</button>`).join("");
+  $("list").innerHTML = s.results.map((r, i) => `<li><button style="--c:var(--s-${shelfOf[r.id] || "core"})" onclick="openPage(${i})"><b>${esc(r.title)}</b>
+    <span class="from">${esc(fill(t("from"), { p: packName(r.pack) }))}</span>${r.snippet ? `<span class="snip">${hl(r.snippet, s.q)}</span>` : ""}</button></li>`).join("");
+  $("more").textContent = !s.busy && s.skipped.length ? fill(t("slow"), { list: s.skipped.map(packName).join(", ") }) : "";
+}
+function pageUrl(id, path) {
+  const base = "http://127.0.0.1:" + cat.port, p = path.split("/").map(encodeURIComponent).join("/");
+  return id.startsWith("r:") ? `${base}/r/${encodeURIComponent(id.slice(2))}/${p}` : `${base}/z/${encodeURIComponent(id)}/${p}`;
+}
+async function openPage(i, item) {
+  const r = item || state.results[i];
+  $("rtitle").textContent = r.title; $("rfrom").textContent = fill(t("from"), { p: packName(r.pack) });
+  $("backbtn").textContent = (document.documentElement.dir === "rtl" ? "→ " : "← ") + t(item ? "back" : "backres");
+  $("rcredit").textContent = "";
+  $("frame").src = pageUrl(r.id, r.path);
+  $("reader").hidden = false; document.body.style.overflow = "hidden";
+  const p = await api("pack", { id: r.id });
+  if (!p.error) $("rcredit").textContent = (p.credit ? p.credit + " " : "") + (p.date ? fill(t("version"), { d: p.date }) : "");
+}
+function closePage() { $("reader").hidden = true; $("frame").src = "about:blank"; document.body.style.overflow = ""; }
+window.addEventListener("message", e => {
+  if (e.source !== $("frame").contentWindow || !e.data || !e.data.archieVault) return;
+  if (e.data.title) $("rtitle").textContent = e.data.title;
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (!$("reader").hidden) closePage(); else if (!$("menu").hidden) toggleMenu(false); }
+});
+async function surprise() {
+  const r = await api("random", { scope: "all" });
+  if (r.error) { $("setup").innerHTML = `<p class="note">${esc(r.error)}</p>`; return; }
+  openPage(0, r);
+}
+load();
+</script>
+</body>
+</html>

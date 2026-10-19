@@ -1,0 +1,19 @@
+# the library itself never goes in the repo
+tools/vault-folder.txt
+data/
+*.zim
+*.zim.part
+*.zip
+out/
+build/
+dist/
+*.spec
+Vault Search.exe
+rachel/
+zim/
+vault-log.txt
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+.pytest_cache/
